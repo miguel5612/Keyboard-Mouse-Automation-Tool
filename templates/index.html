@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Frontend for Microservice</title>
+    <script>
+        function addField() {
+            var container = document.getElementById('fieldsContainer');
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.name = 'fields';
+            container.appendChild(input);
+        }
+    </script>
+</head>
+<body>
+    <h1>Define Structure</h1>
+    <form action="/define_structure" method="post" id="structureForm">
+        <div id="fieldsContainer">
+            <input type="text" name="fields">
+        </div>
+        <button type="button" onclick="addField()">Add Field</button><br>
+        <input type="submit" value="Define">
+    </form>
+
+    <h1>Add Record</h1>
+    <form action="/add_record" method="post">
+        {% for field in fields %}
+        {{ field }}: <input type="text" name="{{ field }}"><br>
+        {% endfor %}
+        <input type="submit" value="Add">
+    </form>
+
+    <h1>Query</h1>
+    <form action="/query" method="get">
+        Field:
+        <select name="field">
+            {% for field in fields %}
+            <option value="{{ field }}">{{ field }}</option>
+            {% endfor %}
+        </select><br>
+        Value: <input type="text" name="value"><br>
+        <input type="submit" value="Query">
+    </form>
+</body>
+</html>

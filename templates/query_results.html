@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Query Results</title>
+</head>
+<body>
+    <h1>Query Results</h1>
+    <table border="1">
+        <thead>
+            <tr>
+                {% for field in fields %}
+                <th>{{ field }}</th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+            <tr>
+                {% for field in fields %}
+                <td>{{ result[field] }}</td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <br>
+    <a href="/">Back to main page</a>
+</body>
+</html>
