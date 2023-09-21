@@ -1,73 +1,35 @@
-# Mockup Tool
+# Microservicio con Front-end para Gestión de Datos
+Este proyecto proporciona un microservicio back-end desarrollado con Flask para definir estructuras de datos, añadir registros y realizar consultas. Además, se incluye un front-end también desarrollado con Flask para interactuar de manera sencilla con el microservicio.
 
-Herramienta que permite simular una API y emular acciones del teclado y el ratón. Ideal para pruebas automatizadas y simulaciones de interacciones del usuario.
-
-## Tabla de Contenidos
-
-1. [Instalación](#instalación)
-2. [Uso](#uso)
-   - [API Mockup](#api-mockup)
-   - [Emulación de Teclado y Ratón](#emulación-de-teclado-y-ratón)
-3. [Ejemplos](#ejemplos)
-4. [Limitaciones](#limitaciones)
-5. [Licencia](#licencia)
-
-## Instalación
-
-1. Asegúrese de tener instalado Python.
-2. Clone o descargue este repositorio.
-3. Instale las dependencias necesarias:
-
-```bash
-pip install Flask pyautogui
-```
-
-## Uso
-
-### API Mockup
-
-- Configure los parámetros de la API simulada, incluido el método de solicitud, el nombre del parámetro, el valor esperado, el tipo de respuesta y el contenido de la respuesta.
-- Haga clic en "Iniciar API" para iniciar la API en el puerto 5000.
-
-### Emulación de Teclado y Ratón
-
-- Ingrese o cargue desde un archivo los comandos que desea ejecutar. Estos comandos pueden incluir acciones como abrir aplicaciones, escribir texto y presionar teclas específicas.
-- Haga clic en "Execute Commands" para iniciar la emulación.
-
-## Ejemplos
-
-### API Mockup
-
-Suponga que desea simular una API que responde con un JSON cuando se hace una solicitud GET con un parámetro `id` de valor `1234`. Para ello:
-
-1. Seleccione "GET" en el "Método de Solicitud".
-2. Ingrese "id" en "Nombre del Parámetro".
-3. Ingrese "1234" en "Valor".
-4. Seleccione "JSON" en "Tipo de Respuesta".
-5. En "Contenido de Respuesta", ingrese `{ "nombre": "Juan", "edad": 30 }`.
-6. Haga clic en "Iniciar API".
-
-Cuando haga una solicitud GET a `http://localhost:5000/api?id=1234`, la respuesta será el JSON `{ "nombre": "Juan", "edad": 30 }`.
-
-### Emulación de Teclado y Ratón
-
-Suponga que desea abrir el Bloc de notas y escribir "Hola Mundo". Para ello:
-
-1. En el área de texto, ingrese:
-open notepad
-wait 1
-type Hola Mundo
-
-2. Haga clic en "Execute Commands".
-
-El programa abrirá el Bloc de notas y escribirá "Hola Mundo" en él.
-
-
-## Limitaciones
-
-Actualmente, la API simulada solo se ejecuta en el puerto 5000.
-La emulación puede no funcionar correctamente si se interrumpe manualmente durante su ejecución.
-
-## Licencia
-Este software es de código abierto y se distribuye bajo la licencia MIT.
-
+## Contenido
+* Características
+* Requisitos
+* Instalación
+* Uso
+* Contribuciones
+* Licencia
+  
+# Características
+## Define Estructura: 
+Permite al usuario definir una estructura de datos con campos personalizados.
+## Añadir Registros: 
+Una vez definida la estructura, permite añadir registros conforme a ella.
+## Consultas: 
+Permite realizar consultas basadas en campos específicos.
+## Requisitos
+* Python 3.x
+* Flask
+* Requests
+# Instalación
+1. Clona este repositorio
+2. cd universalAPICreator
+3. pip install flask requests
+4. Ejecuta Back y front con Python
+   python base.py
+   python front.py
+# Uso
+Abre un navegador y ve a http://localhost:5001 para interactuar con el front-end.
+# Contribuciones
+Las contribuciones son bienvenidas. Si encuentras un bug o tienes una sugerencia, por favor abre un issue para discutirlo.
+# Licencia
+Este proyecto está bajo la licencia MIT. Consulta el archivo LICENSE para más detalles.
