@@ -94,18 +94,55 @@ def load_commands_from_file(text_widget):
 
 def execute_commands(commands):
     lines = commands.strip().split('\n')
-    for line in lines:
-        cmd, *args = line.split()
-        if cmd == 'open':
-            pyautogui.hotkey('win', 'r')
-            pyautogui.write(args[0])
-            pyautogui.press('enter')
-        elif cmd == 'type':
-            pyautogui.write(' '.join(args))
-        elif cmd == 'press':
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        if not line:  # Esto verifica si la línea está vacía o solo tiene espacios en blanco.
+            i += 1
+            continue
+
+        if line.startswith("loop over words:"):
+            # Extraemos la lista de palabras
+            words = eval(line.split(":")[1].strip())
+            loop_start = i + 1
+            # Buscamos el "end loop"
+            loop_end = lines.index("end loop", loop_start)
+            for word in words:
+                # Ejecutamos las líneas dentro del bucle
+                for j in range(loop_start, loop_end):
+                    loop_line = lines[j].replace("current_word", word)
+                    execute_single_command(loop_line)
+            i = loop_end + 1
+        else:
+            execute_single_command(line)
+            i += 1
+
+def execute_single_command(command):
+    if command.startswith("#"):  # Ignora comentarios
+        return
+    
+    parts = command.split()
+    if not parts:  # Si la línea está vacía o solo tiene espacios
+        return
+    
+    cmd = parts[0]
+    args = parts[1:]
+
+    if cmd == 'open':
+        pyautogui.hotkey('win', 'r')
+        pyautogui.write(args[0])
+        pyautogui.press('enter')
+    elif cmd == 'type':
+        pyautogui.write(' '.join(args))
+    elif cmd == 'press':
+        if '+' in args[0]:
+            keys = args[0].split('+')
+            pyautogui.hotkey(*keys)
+        else:
             pyautogui.press(args[0])
-        elif cmd == 'wait':
-            time.sleep(float(args[0]))
+    elif cmd == 'wait':
+        time.sleep(float(args[0]))
+
 
 def setup_keyboard_mouse_tab(tab):
     instructions = ttk.Label(tab, text="Enter keyboard and mouse commands:")

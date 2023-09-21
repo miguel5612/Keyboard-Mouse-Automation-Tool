@@ -1,0 +1,28 @@
+open chrome
+wait 2
+type https://www.google.com/
+press enter
+wait 3
+
+# Supongamos que estas son las palabras que quieres buscar
+loop over words: ["testing software", "automated testing", "best testing practices", "testing tools"]
+
+    # Escribe la palabra actual en el buscador
+    type current_word
+    press enter
+    wait 3
+    
+    # Selecciona el primer enlace y lo abre
+    press tab
+    press enter
+    wait 5
+    
+    # Usa Ctrl+L para llevar el foco a la barra de direcciones
+    press ctrl+l
+    wait 1
+    type https://www.google.com/
+    press enter
+    wait 3
+
+end loop
+
