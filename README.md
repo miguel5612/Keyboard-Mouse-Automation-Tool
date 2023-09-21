@@ -1,6 +1,6 @@
 # Mockup Tool
 
-Herramienta que permite simular una API y emular acciones del teclado y el ratón. Ideal para pruebas automatizadas y simulaciones de interacciones del usuario.
+Herramienta que permite simular una API y emular acciones del teclado y el ratón. Ideal para automatizar comportamientos en tu pc y simulaciones de interacciones del usuario.
 
 ## Tabla de Contenidos
 
