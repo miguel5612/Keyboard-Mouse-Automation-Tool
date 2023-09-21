@@ -62,6 +62,22 @@ type Hola Mundo
 
 El programa abrirá el Bloc de notas y escribirá "Hola Mundo" en él.
 
+### Evitar el Apagado de Pantalla
+
+Para evitar que el computador entre en modo de suspensión o apague la pantalla mientras estás ocupado en otras tareas, puedes hacer que el programa emule el movimiento del ratón en intervalos aleatorios entre 0 y 30 segundos. De esta manera, el sistema operativo creerá que estás interactuando activamente con el computador.
+
+1. En el área de texto, ingrese:
+
+loop:
+wait random(0,30)
+move mouse random(-10,10) random(-10,10)
+goto loop
+
+css
+
+2. Haga clic en "Execute Commands".
+
+El programa emulará el movimiento del ratón en posiciones aleatorias dentro de un rango de -10 a 10 píxeles en ambos ejes (x, y) cada 0 a 30 segundos. Esto evitará que el sistema operativo active cualquier salvapantallas o entre en modo de suspensión.
 
 ## Limitaciones
 
