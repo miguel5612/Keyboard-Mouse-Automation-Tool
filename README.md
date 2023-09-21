@@ -55,11 +55,11 @@ Suponga que desea abrir el Bloc de notas y escribir "Hola Mundo". Para ello:
 
 1. En el área de texto, ingrese:
 
-`
+```
 open notepad
 wait 1
 type Hola Mundo
-`
+```
 
 2. Haga clic en "Execute Commands".
 
@@ -71,13 +71,13 @@ Para evitar que el computador entre en modo de suspensión o apague la pantalla 
 
 1. En el área de texto, ingrese:
 
-`
+```
 loop:
 wait random(0,30)
 move mouse random(-10,10) random(-10,10)
 goto loop
 css
-`
+```
 
 2. Haga clic en "Execute Commands".
 
