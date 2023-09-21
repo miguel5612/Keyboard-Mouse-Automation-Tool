@@ -1,0 +1,10 @@
+open chrome
+wait 2
+type https://www.google.com/
+press enter
+wait 3
+type testing software
+press enter
+wait 2
+press tab
+press enter
