@@ -1,5 +1,5 @@
 loop:
 wait 3
 move mouse random(-10,10) random(-10,10)
+click
 goto loop
-css

@@ -121,15 +121,22 @@ def execute_commands(commands, status_label):
         elif line == "goto loop":
             if loops.get(i - 1, 0) < 10:  # Limitamos la repetición del loop a 10 veces para evitar un bucle infinito
                 i = i - 2  # Regresamos a la línea anterior al "loop:"
+                if i - 1 not in loops:
+                    loops[i - 1] = 0
                 loops[i - 1] += 1
                 continue
             else:
                 loops[i - 1] = 0
                 i += 1
         else:
-            execute_single_command(line)
-            i += 1
-
+            try:
+                i += 1
+                execute_single_command(line)
+            except pyautogui.FailSafeException:
+                # Mueve el mouse al centro de la pantalla.
+                screen_width, screen_height = pyautogui.size()
+                pyautogui.moveTo(screen_width / 2, screen_height / 2)
+            
     if command_stop_flag.is_set():
         status_label.config(text="Ejecución cancelada")
     else:
@@ -168,7 +175,8 @@ def execute_single_command(command):
         y_offset = int(args[2])
         current_x, current_y = pyautogui.position()
         pyautogui.moveTo(current_x + x_offset, current_y + y_offset)
-
+    elif cmd == 'click':
+        pyautogui.click()
 
 def evaluate_arg(arg):
     if "random(" in arg:
