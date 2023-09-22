@@ -6,6 +6,7 @@ import time
 import threading
 import json
 import os
+import random
 
 app = Flask(__name__)
 
@@ -95,6 +96,7 @@ def execute_commands(commands, status_label):
     command_stop_flag.clear()
     lines = commands.strip().split('\n')
     i = 0
+    loops = {}  # Para manejar loops
     while i < len(lines) and not command_stop_flag.is_set():
         line = lines[i].strip()
         if not line:
@@ -112,6 +114,18 @@ def execute_commands(commands, status_label):
                     loop_line = lines[j].replace("current_word", word)
                     execute_single_command(loop_line)
             i = loop_end + 1
+        elif line == "loop:":
+            if i not in loops:
+                loops[i] = 0
+            i += 1
+        elif line == "goto loop":
+            if loops.get(i - 1, 0) < 10:  # Limitamos la repetición del loop a 10 veces para evitar un bucle infinito
+                i = i - 2  # Regresamos a la línea anterior al "loop:"
+                loops[i - 1] += 1
+                continue
+            else:
+                loops[i - 1] = 0
+                i += 1
         else:
             execute_single_command(line)
             i += 1
@@ -130,7 +144,7 @@ def execute_single_command(command):
         return
     
     cmd = parts[0]
-    args = parts[1:]
+    args = [evaluate_arg(arg) for arg in parts[1:]]
 
     if cmd == 'open':
         pyautogui.hotkey('win', 'r')
@@ -149,6 +163,18 @@ def execute_single_command(command):
             pyautogui.press(args[0])
     elif cmd == 'wait':
         time.sleep(float(args[0]))
+    elif cmd == 'move' and args[0] == 'mouse':
+        x_offset = int(args[1])
+        y_offset = int(args[2])
+        current_x, current_y = pyautogui.position()
+        pyautogui.moveTo(current_x + x_offset, current_y + y_offset)
+
+
+def evaluate_arg(arg):
+    if "random(" in arg:
+        start, end = map(int, arg.replace("random(", "").replace(")", "").split(","))
+        return str(random.randint(start, end))
+    return arg
 
 def cancel_execution(status_label):
     command_stop_flag.set()

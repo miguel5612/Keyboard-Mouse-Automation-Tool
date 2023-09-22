@@ -1,0 +1,3 @@
+open notepad
+wait 1
+type Hola Mundo
