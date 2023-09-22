@@ -5,6 +5,7 @@ import pyautogui
 import time
 import threading
 import json
+import os
 
 app = Flask(__name__)
 
@@ -15,6 +16,8 @@ mock_data = {
     "response_content": None,
     "request_method": None
 }
+
+command_stop_flag = threading.Event()
 
 @app.route('/api', methods=['GET', 'POST', 'PUT', 'DELETE'])
 def mock_endpoint():
@@ -45,9 +48,6 @@ def mock_endpoint():
             return mock_data["response_content"]
     return "No coincide", 400
 
-
-
-
 def start_mock_api(param_name, param_value, response_type, response_content, request_method, port):
     mock_data["parameter"] = param_name
     mock_data["value"] = param_value
@@ -55,7 +55,6 @@ def start_mock_api(param_name, param_value, response_type, response_content, req
     mock_data["response_content"] = response_content
     mock_data["request_method"] = request_method
 
-    # Usamos threading para evitar que la GUI se quede pegada
     t = threading.Thread(target=lambda: app.run(port=port))
     t.start()
 
@@ -92,24 +91,24 @@ def load_commands_from_file(text_widget):
             text_widget.delete("1.0", tk.END)
             text_widget.insert(tk.END, file.read())
 
-def execute_commands(commands):
+def execute_commands(commands, status_label):
+    command_stop_flag.clear()
     lines = commands.strip().split('\n')
     i = 0
-    while i < len(lines):
+    while i < len(lines) and not command_stop_flag.is_set():
         line = lines[i].strip()
-        if not line:  # Esto verifica si la línea está vacía o solo tiene espacios en blanco.
+        if not line:
             i += 1
             continue
 
         if line.startswith("loop over words:"):
-            # Extraemos la lista de palabras
             words = eval(line.split(":")[1].strip())
             loop_start = i + 1
-            # Buscamos el "end loop"
             loop_end = lines.index("end loop", loop_start)
             for word in words:
-                # Ejecutamos las líneas dentro del bucle
                 for j in range(loop_start, loop_end):
+                    if command_stop_flag.is_set():
+                        break
                     loop_line = lines[j].replace("current_word", word)
                     execute_single_command(loop_line)
             i = loop_end + 1
@@ -117,12 +116,17 @@ def execute_commands(commands):
             execute_single_command(line)
             i += 1
 
+    if command_stop_flag.is_set():
+        status_label.config(text="Ejecución cancelada")
+    else:
+        status_label.config(text="Ejecución completada")
+
 def execute_single_command(command):
-    if command.startswith("#"):  # Ignora comentarios
+    if command.startswith("#"):
         return
     
     parts = command.split()
-    if not parts:  # Si la línea está vacía o solo tiene espacios
+    if not parts:
         return
     
     cmd = parts[0]
@@ -132,6 +136,9 @@ def execute_single_command(command):
         pyautogui.hotkey('win', 'r')
         pyautogui.write(args[0])
         pyautogui.press('enter')
+    elif cmd == 'close':
+        os.system(f"taskkill /im {args[0]}.exe /f")
+        #pyautogui.hotkey('alt', 'f4')
     elif cmd == 'type':
         pyautogui.write(' '.join(args))
     elif cmd == 'press':
@@ -143,6 +150,9 @@ def execute_single_command(command):
     elif cmd == 'wait':
         time.sleep(float(args[0]))
 
+def cancel_execution(status_label):
+    command_stop_flag.set()
+    status_label.config(text="Ejecución cancelada")
 
 def setup_keyboard_mouse_tab(tab):
     instructions = ttk.Label(tab, text="Enter keyboard and mouse commands:")
@@ -154,8 +164,14 @@ def setup_keyboard_mouse_tab(tab):
     load_button = ttk.Button(tab, text="Load from file", command=lambda: load_commands_from_file(action_content))
     load_button.grid(column=0, row=2)
 
-    start_button = ttk.Button(tab, text="Execute Commands", command=lambda: execute_commands(action_content.get("1.0", tk.END)))
-    start_button.grid(column=1, row=2, columnspan=2)
+    status_label = ttk.Label(tab, text="Esperando comandos...")
+    status_label.grid(column=0, row=3, columnspan=3)
+
+    start_button = ttk.Button(tab, text="Execute Commands", command=lambda: [status_label.config(text="Ejecutando..."), threading.Thread(target=lambda: execute_commands(action_content.get("1.0", tk.END), status_label)).start()])
+    start_button.grid(column=0, row=4, columnspan=2)
+
+    cancel_button = ttk.Button(tab, text="Cancelar", command=lambda: cancel_execution(status_label))
+    cancel_button.grid(column=2, row=4)
 
 def main():
     root = tk.Tk()

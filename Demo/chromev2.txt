@@ -26,3 +26,4 @@ loop over words: ["testing software", "automated testing", "best testing practic
 
 end loop
 
+close chrome

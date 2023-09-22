@@ -8,3 +8,4 @@ press enter
 wait 2
 press tab
 press enter
+close chrome
