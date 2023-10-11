@@ -1,12 +1,15 @@
 import tkinter as tk
 from tkinter import ttk, filedialog
 from flask import Flask, request, jsonify
+from pytesseract import pytesseract
 import pyautogui
 import time
 import threading
 import json
 import os
 import random
+import keyboard
+
 
 app = Flask(__name__)
 
@@ -97,61 +100,79 @@ def execute_commands(commands, status_label):
     lines = commands.strip().split('\n')
     i = 0
     loops = {}  # Para manejar loops
+    
     while i < len(lines) and not command_stop_flag.is_set():
         line = lines[i].strip()
-        if not line:
-            i += 1
-            continue
+        
+        repeat = 1  # Número de veces que se repetirá el comando
+        split_line = line.split()
+        if split_line and split_line[0].isdigit():
 
-        if line.startswith("loop over words:"):
-            words = eval(line.split(":")[1].strip())
-            loop_start = i + 1
-            loop_end = lines.index("end loop", loop_start)
-            for word in words:
-                for j in range(loop_start, loop_end):
-                    if command_stop_flag.is_set():
-                        break
-                    loop_line = lines[j].replace("current_word", word)
-                    execute_single_command(loop_line)
-            i = loop_end + 1
-        elif line == "loop:":
-            if i not in loops:
-                loops[i] = 0
-            i += 1
-        elif line == "goto loop":
-            if loops.get(i - 1, 0) < 10:  # Limitamos la repetición del loop a 10 veces para evitar un bucle infinito
-                i = i - 2  # Regresamos a la línea anterior al "loop:"
-                if i - 1 not in loops:
-                    loops[i - 1] = 0
-                loops[i - 1] += 1
-                continue
-            else:
-                loops[i - 1] = 0
-                i += 1
-        else:
-            try:
-                i += 1
-                execute_single_command(line)
-            except pyautogui.FailSafeException:
-                # Mueve el mouse al centro de la pantalla.
-                screen_width, screen_height = pyautogui.size()
-                pyautogui.moveTo(screen_width / 2, screen_height / 2)
+            repeat = int(line.split()[0])
+            line = " ".join(line.split()[1:])
+        
+        for _ in range(repeat):  # Agregamos esta línea para manejar la repetición
+            if not line:
+                break
             
+            if line.startswith("loop over"):
+                loop_variable = line.split()[2].replace(":", "")
+                words = eval(line.split(":")[1].strip())
+                loop_start = i + 1
+                loop_end = lines.index("end loop", loop_start)
+                for word in words:
+                    for j in range(loop_start, loop_end):
+                        if command_stop_flag.is_set():
+                            break
+                        loop_line = lines[j].replace(loop_variable, word)
+                        execute_single_command(loop_line)
+                i = loop_end + 1
+            elif line == "loop:":
+                if i not in loops:
+                    loops[i] = 0
+                i += 1
+            elif line == "goto loop":
+                if loops.get(i - 1, 0) < 10:  # Limitamos la repetición del loop a 10 veces para evitar un bucle infinito
+                    i = i - 2  # Regresamos a la línea anterior al "loop:"
+                    if i - 1 not in loops:
+                        loops[i - 1] = 0
+                    loops[i - 1] += 1
+                    continue
+                else:
+                    loops[i - 1] = 0
+                    i += 1
+            else:
+                try:
+                    execute_single_command(line)
+                except pyautogui.FailSafeException:
+                    # Mueve el mouse al centro de la pantalla.
+                    screen_width, screen_height = pyautogui.size()
+                    pyautogui.moveTo(screen_width / 2, screen_height / 2)
+
+        i += 1  # Mueve al siguiente comando sólo después de haber repetido el comando actual las veces necesarias
+
     if command_stop_flag.is_set():
         status_label.config(text="Ejecución cancelada")
     else:
         status_label.config(text="Ejecución completada")
 
 def execute_single_command(command):
-    if command.startswith("#"):
+    if command.startswith("#") or not command:
         return
     
-    parts = command.split()
+    parts = command.split(maxsplit=1)
     if not parts:
         return
-    
+
     cmd = parts[0]
-    args = [evaluate_arg(arg) for arg in parts[1:]]
+
+    # Si el comando es "open" o "type", y el argumento está entre comillas
+    if cmd in ["open", "type"] and '"' in parts[1]:
+        args = [parts[1].split('"')[1]]  # Extrae el contenido entre comillas
+    elif cmd in ["open", "type"]:
+        args = [parts[1]]  # Toma todo después del comando como un solo argumento
+    else:
+        args = parts[1].split()
 
     if cmd == 'open':
         pyautogui.hotkey('win', 'r')
@@ -159,11 +180,14 @@ def execute_single_command(command):
         pyautogui.press('enter')
     elif cmd == 'close':
         os.system(f"taskkill /im {args[0]}.exe /f")
-        #pyautogui.hotkey('alt', 'f4')
     elif cmd == 'type':
-        pyautogui.write(' '.join(args))
+        pyautogui.write(args[0])
     elif cmd == 'press':
-        if '+' in args[0]:
+        if args[0] == 'esc':  # Agregamos esta condición para manejar la tecla esc
+            keyboard.press('esc')
+            keyboard.release('esc')
+            return
+        elif '+' in args[0]:
             keys = args[0].split('+')
             pyautogui.hotkey(*keys)
         else:
@@ -171,18 +195,32 @@ def execute_single_command(command):
     elif cmd == 'wait':
         time.sleep(float(args[0]))
     elif cmd == 'move' and args[0] == 'mouse':
-        x_offset = int(args[1])
-        y_offset = int(args[2])
+        x_offset = int(evaluate_arg(args[1]))
+        y_offset = int(evaluate_arg(args[2]))
         current_x, current_y = pyautogui.position()
         pyautogui.moveTo(current_x + x_offset, current_y + y_offset)
     elif cmd == 'click':
-        pyautogui.click()
+        button = 'left'  # default
+        if args and args[0] == 'right':
+            button = 'right'
+        pyautogui.click(button=button)
+    elif cmd == 'click' and args and args[0] not in ['left', 'right']:
+        click_on_text(args[0])
 
 def evaluate_arg(arg):
-    if "random(" in arg:
+    if "random(" in arg and "," in arg:
         start, end = map(int, arg.replace("random(", "").replace(")", "").split(","))
         return str(random.randint(start, end))
     return arg
+
+
+def click_on_text(text):
+    try:
+        location = pyautogui.locateOnScreen(pyautogui.screenshot(text))
+        center = pyautogui.center(location)
+        pyautogui.click(center)
+    except TypeError:
+        print(f"Texto '{text}' no encontrado en pantalla.")
 
 def cancel_execution(status_label):
     command_stop_flag.set()
@@ -214,12 +252,12 @@ def main():
     tabControl = ttk.Notebook(root)
 
     tab1 = ttk.Frame(tabControl)
-    tabControl.add(tab1, text='API Mockup')
-    setup_api_tab(tab1)
+    tabControl.add(tab1, text='Keyboard & Mouse Emulation')
+    setup_keyboard_mouse_tab(tab1)
 
     tab2 = ttk.Frame(tabControl)
-    tabControl.add(tab2, text='Keyboard & Mouse Emulation')
-    setup_keyboard_mouse_tab(tab2)
+    tabControl.add(tab2, text='API Mockup')
+    setup_api_tab(tab2)    
 
     tabControl.pack(expand=1, fill="both")
 
